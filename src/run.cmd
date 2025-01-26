@@ -1,0 +1,1 @@
+gcc -o out main.c probabilities.c functions.c variation.c && out.exe
