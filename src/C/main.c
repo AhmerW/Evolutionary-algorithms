@@ -36,7 +36,7 @@ Generation get_initial_selection() {
     for (int i = 0; i < POPULATION_SIZE; i++) {
         // generate the values for the agent.
         char* genotype = generate_genotype(MAX_N_BITSIZE);
-        int phenotype = fromBinary(genotype);
+        int phenotype = from_binary(genotype);
         int performance = fitness(phenotype);
 
         // agent

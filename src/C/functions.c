@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include "functions.h"
 
@@ -11,6 +12,12 @@ float random_float(const float lower, const float upper )
     return lower + scale * ( upper - lower );     
 }
 
-int fromBinary(const char* str) {
+int from_binary(const char* str) {
     return (int)strtol(str, NULL, 2);
+}
+
+char* split_string(char* str, int index){
+    char* output = (char*)malloc((strlen(str) + 1) * sizeof(char));
+    return output;
+    
 }

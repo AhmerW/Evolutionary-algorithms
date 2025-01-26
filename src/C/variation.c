@@ -1,10 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "probabilities.h"
 #include "definitions.h"
-
+#include "functions.h"
+#include "variation.h"
 
 Agent* generate_offsprings(Agent agents[]) {
     Agent* new_agents = (Agent*)malloc(POPULATION_SIZE * sizeof(Agent));
@@ -14,13 +16,16 @@ Agent* generate_offsprings(Agent agents[]) {
             skip = false;
             continue;
         }
-        if (i + 1 >= (POPULATION_SIZE - 1)) {
+        if ((i + 1) > (POPULATION_SIZE - 1)) {
             fprintf(stderr, "POPULATION_SIZE is an odd-number");
             new_agents[i] = agents[i];
             break;
         }
         int current_crossover_point = random(0, MAX_N_BITSIZE);
         int next_crossover_point = random(0, MAX_N_BITSIZE);
+
+        char* current = split_string(agents[i].genotype, current_crossover_point);
+
 
         skip = true;
     }
