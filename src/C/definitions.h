@@ -16,6 +16,7 @@ typedef struct Agent Agent;
 
 struct Generation {
     struct Agent agents[POPULATION_SIZE];
+    struct Agent fittest;
     int size, sum, max;
     double average;
 };

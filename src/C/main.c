@@ -8,11 +8,10 @@
 #include "probabilities.h"
 #include "definitions.h"
 #include "variation.h"
+#include "output.h"
+#include "selection.h"
 
 
-unsigned int fitness(int x) {
-    return x*x;
-}
 
 char* generate_genotype(int size) {
     char* str = (char*)malloc((size + 1) * sizeof(char));
@@ -37,20 +36,20 @@ Generation get_initial_selection() {
         // generate the values for the agent.
         char* genotype = generate_genotype(MAX_N_BITSIZE);
         int phenotype = from_binary(genotype);
-        int performance = fitness(phenotype);
+        int performance = fitness(genotype, phenotype);
 
         // agent
         // probabilty is calculated later
-        Agent a = {i, phenotype, performance, 0, genotype};
+        agents[i] = (Agent){i, phenotype, performance, 0, genotype};
 
-        sum = sum + a.fitness;
-        if (a.fitness > max) {
-            max = a.fitness;
+        sum = sum + performance;
+        if (performance > max) {
+            max = performance;
         }
 
-        agents[i] = a;
     }
     
+    Agent fittest = agents[0];
     Generation gen;
     gen.sum = sum;
     gen.max = max;
@@ -59,53 +58,96 @@ Generation get_initial_selection() {
 
     // arrays cant be directly referenced since "agents" is a local variable
     // inside the local scope.
+    // fitness proportionate selection (parent selection)
     for (int i = 0; i < POPULATION_SIZE; i++) {
+        if (fitness(agents[i].genotype, agents[i].phenotype) > fittest.fitness) {
+            fittest = agents[i];
+        }
         gen.agents[i] = agents[i];
-        gen.agents[i].prob = (double)gen.agents[i].fitness / (double)sum;
+        // formula for pFPS
+        gen.agents[i].prob = (double)gen.agents[i].fitness / (double)sum; // PFPS(i)
         struct Agent a = gen.agents[i];
         fprintf(stderr, "%s with fitness(%d) = %d (%f %%)\n", a.genotype, a.phenotype, a.fitness, a.prob);
     }
+    gen.fittest = fittest;
  
     return gen;
 }
 
 Generation get_next_generation(Generation* gen) {
+    print_generation(*gen);
+
+    // keep the best agent
+    Agent best_agent = gen->agents[0];
+    for (int i = 1; i < POPULATION_SIZE; i++) {
+        if (gen->agents[i].fitness > best_agent.fitness) {
+            best_agent = gen->agents[i];
+        }
+    }
+
+
+    // generate cumulative probabilities for selection
     ProbabilityMatch* prob = get_cumulative_probability(gen->agents);
     double* rand = (double*)malloc(POPULATION_SIZE * sizeof(double));
 
-    Agent agents[POPULATION_SIZE];
-    for (int i = 0; i < POPULATION_SIZE; i++) {
-        double dbl = random_float(0.0, 1.0);
-        // now have to find appropiate agent given this probabability bound "dbl"
-        for (int j = 0;  j < POPULATION_SIZE; j++) {
-            if (j == (POPULATION_SIZE - 1)) {
-                agents[i] = prob[j].agent;
-                break;
-            }
-            // fprintf(stderr, "Testing: %f < %f < %f\n", prob[j].prob, dbl, prob[j + 1].prob);
-            if (prob[j].prob >= dbl && dbl <= prob[j + 1].prob) {
-                agents[i] = prob[j].agent;
-                break;
-            } 
-            
-        }
-    }
-    // we should now have POPULATION_SIZE agents for our next generation according to their probabilities.
+    Agent* agents = (Agent*)malloc(POPULATION_SIZE * sizeof(Agent));
+    // part of the selection process - elitism (at least one copy of the N (1) fittest solutions)
+    agents[0] = best_agent; 
+
+    // alternatively : tournament selection.
+    fitness_proportionate_selection(agents, prob);
 
     // next step would be the VARIATION, e.g generate the offsprings and do the mutation.
-    Agent* offspring = generate_offsprings(agents);
+    Agent* offsprings = generate_offsprings(agents);
+
+    // Now given these offsprings, and the previous generations' agents. We have to select the best out of them
+    // also known as survival selection (given a set of 'mu' old and 'lambda' new ones)
+    // -> elitism
+
+    // create and return the new generation
+    Generation new_gen;
+    int sum = 0;
+    int max = 0;
+    for (int i = 0; i < POPULATION_SIZE; i++) {
+        sum = sum + offsprings[i].fitness;
+        if (offsprings[i].fitness > max) {
+            max = offsprings[i].fitness;
+        }
+    }
+    for (int j = 0; j < POPULATION_SIZE; j++) {
+        new_gen.agents[j] = offsprings[j];
+        new_gen.agents[j].prob = (double)offsprings[j].fitness / (double)sum;
+    }
+    new_gen.fittest = best_agent;
+    new_gen.sum = sum;
+    new_gen.max = max;
+    new_gen.size = POPULATION_SIZE;
+    new_gen.average = sum / POPULATION_SIZE;
+
 
     free(rand);
     free(prob);
+
+    return new_gen;
 }
 
 int main() {
     srand(time(NULL));
-    fprintf(stderr, "%s", "Loaded program.\n");
+    fprintf(stderr, "Loaded program with POPULATION_SIZE=%d, MAX_N_BITSIZE=%d\n", POPULATION_SIZE, MAX_N_BITSIZE);
 
     Generation gen = get_initial_selection();
-    fprintf(stderr, "initial generation: %d, %f, %d\n", gen.sum, gen.average, gen.max);
+    for (int i = 0;  i < 20; i++) {
+        print_generation(gen);
 
-    get_next_generation(&gen);
+        if (strcmp(gen.fittest.genotype, "11111") == 0) {
+            fprintf(stderr, "Found optimal solution (local or global optima)\n");
+            print_agent(gen.fittest);
+            break;
+        }
+
+        gen = get_next_generation(&gen);
+        
+    }
+    
     return 0;
 }

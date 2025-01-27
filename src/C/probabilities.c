@@ -5,15 +5,14 @@
 
 
 
-ProbabilityMatch* get_cumulative_probability(Agent agents[])  {
-    /*Given an agent returns the cumulative probabilty of that agent alongside the agent (ProbabilityMatch)*/
+ProbabilityMatch* get_cumulative_probability(Agent agents[]) {
     double p = 0;
     ProbabilityMatch* pms = (ProbabilityMatch*)malloc(POPULATION_SIZE * sizeof(ProbabilityMatch));
     for (int i = 0; i < POPULATION_SIZE; i++) {
-        p = p + (double)agents[i].prob;
-        ProbabilityMatch pm =  {p, agents[i]};
-        pms[i] = pm;
- 
+        p += agents[i].prob;
+        pms[i] = (ProbabilityMatch){p, agents[i]};
     }
+    // Ensure the last cumulative probability is exactly 1
+    pms[POPULATION_SIZE - 1].prob = 1.0; 
     return pms;
 }
