@@ -19,7 +19,7 @@ char* generate_genotype(int size) {
         fprintf(stderr, "%s", "Memory allocation failed");
     }
     for (int i = 0; i < size; i++) {
-        int bit = random(0, 1);
+        int bit = random_value(0, 1);
         str[i] = bit + '0';
     }
     str[size] = '\0';

@@ -83,7 +83,7 @@ Agent* generate_offsprings(Agent agents[]) {
         // for binaries, this wouldnt work for most other representations.
         // index based splitting, ends at MAX_N_BITSIZE - 1
         // only need one crossover_point since agent[i + 1] needs to have same tail and header length.
-        int crossover_point = random(0, MAX_N_BITSIZE - 2);
+        int crossover_point = random_value(0, MAX_N_BITSIZE - 2);
 
         char** current = split_string(new_agents[i].genotype, crossover_point);
         char** next = split_string(new_agents[i + 1].genotype, crossover_point);

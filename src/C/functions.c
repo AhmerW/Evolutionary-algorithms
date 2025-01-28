@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+
 #include "functions.h"
 
-int random(const int lower, const int upper) {
+int random_value(const int lower, const int upper) {
     return rand() % (upper - lower + 1) + lower;
 }
 float random_float(const float lower, const float upper )
