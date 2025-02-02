@@ -74,6 +74,7 @@ Generation get_initial_selection() {
     return gen;
 }
 
+
 Generation get_next_generation(Generation* gen) {
     print_generation(*gen);
 
@@ -124,12 +125,17 @@ Generation get_next_generation(Generation* gen) {
     new_gen.size = POPULATION_SIZE;
     new_gen.average = sum / POPULATION_SIZE;
 
-
+    // freeing allocated memory
     free(rand);
     free(prob);
+    // works since we allocate agents into an existing agent memory block (replacing)
+    free(agents);
+
 
     return new_gen;
 }
+
+
 
 int main() {
     srand(time(NULL));
@@ -146,7 +152,7 @@ int main() {
         }
 
         gen = get_next_generation(&gen);
-        
+
     }
     
     return 0;
